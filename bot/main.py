@@ -1,8 +1,12 @@
 import telebot
 from telebot import types 
+import requests
+from dotenv import load_dotenv
+import os
+load_dotenv()
 
-token = '8201498258:AAEQF_ubDnxpxWo0RaKj8UCzUnziQO6Du80'
-bot = telebot.TeleBot(token) 
+TG_TOKEN = os.getenv('TG_TOKEN')
+bot = telebot.TeleBot(TG_TOKEN) 
 
 lessons = {
     1: {
@@ -28,6 +32,8 @@ created_sublessons = {1: [1]}
 #обработка Старта
 @bot.message_handler(commands=['start'])
 def main(message):
+    response = requests.get(f'http://127.0.0.1:8000/api/v1/chat/{message.chat.id}/')
+    if response.status_code == 
     bot.send_message(message.chat.id, 'Привет! Я интеллектуальный бот-помощник для новичков в программе блендере. Если хочешь начать обучение напиши "Поехали!"')
 
 inline1 = types.InlineKeyboardMarkup()
@@ -45,11 +51,11 @@ def create_lessonbtn(lesson_num, sublesson_num):
     markup = types.InlineKeyboardMarkup()
     markup.add(types.InlineKeyboardButton(
         text=f'Пройти тест {lesson_num}.{sublesson_num}',
-        callback_data='no_action'  # Просто заглушка, чтобы кнопка работала ( ЭТУ ТОЖЕ)
+        callback_data='no_action'  
     ))
     markup.add(types.InlineKeyboardButton(
         text='Назад к уроку',
-        callback_data='no_action'  # Просто заглушка ( ЭТУ ШТУКУ НЕ Я ПИСАЛ)
+        callback_data='no_action' 
     ))
     return markup
 # ЭТО ДЛЯ СОЗДЯНИЯ КНОПОЧЕК 
@@ -69,7 +75,7 @@ def create_btn(lesson_num, sublesson_num):
             created_sublessons[next_lesson].append(1)
             markup.add(types.InlineKeyboardButton(
                 text=f'Урок {next_lesson}',
-                callback_data='no_action'  # эту шнягу тоже
+                callback_data='no_action'  
             ))
         
         markup.add(types.InlineKeyboardButton(
@@ -101,10 +107,10 @@ def create_sublessons_keyboard(lesson_num):
     markup = types.InlineKeyboardMarkup()
     if lesson_num in created_sublessons:
         for sub_num in created_sublessons[lesson_num]:
-            sub_name = lessons[lesson_num]['sublessons'][sub_num]['name']  # В ЭТОЙ СТРОКЕ НИЧЕ НЕ ПОНЯЛ
+            sub_name = lessons[lesson_num]['sublessons'][sub_num]['name']  
             markup.add(types.InlineKeyboardButton(
                 text=f'{lesson_num}.{sub_num} {sub_name}',
-                callback_data='no_action'            #ЭТО ТОЖЕ НЕ Я, НО ЭТ НАДО
+                callback_data='no_action' 
             ))
     markup.add(types.InlineKeyboardButton(
         text='Назад к урокам',
