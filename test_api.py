@@ -1,16 +1,9 @@
-import requests
-import json
-url = 'http://127.0.0.1:8000/api/v1/chat/29/'
-headers = {
-    'Content-Type': 'application/json'
-}
-data = {
-    'chat':'212312',
-    'name':'asdkajsdlkjasdlkj',
-    'level':'1'
-}
-response = requests.get(url) #headers=headers, data=json.dumps(data))
-print(response.status_code)  
-if response.status_code == 404:
-    res = requests.post('http://127.0.0.1:8000/api/v1/chat/', headers=headers, data=json.dumps(data))
-    print(res.status_code)
+from gigachat import GigaChat
+
+giga = GigaChat(
+   credentials="MDE5YmIzNWYtOGM2Ny03ZTlkLTk3YjAtMDc2ZWFhOGE3OTVjOmFiN2MyZmJlLWIwMzItNGU0Ny05YTM3LTc5OGFkNzQ2ZmNlYg==",
+)
+
+response = giga.chat("Привет! Как дела?")
+
+print(response.choices[0].message.content)
