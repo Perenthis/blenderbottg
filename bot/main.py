@@ -13,10 +13,10 @@ TG_TOKEN = os.getenv('TG_TOKEN')
 GIGA_TOKEN = os.getenv('credentials')
 bot = telebot.TeleBot(TG_TOKEN)
 
-# giga = GigaChat(
-#    credentials=GIGA_TOKEN,
-#    model="GigaChat-Pro",
-# )
+giga = GigaChat(
+   credentials=GIGA_TOKEN,
+   model="GigaChat-Pro",
+)
 
 headers = {
     'Content-Type': 'application/json'
@@ -29,8 +29,7 @@ gigahelp = types.InlineKeyboardButton(text='Помощь гигачата', call
 inline1 = types.InlineKeyboardMarkup()
 teach = types.InlineKeyboardButton(text='Обучение', callback_data='teach')
 tips = types.InlineKeyboardButton(text='Советы', callback_data='tips')
-hotkeys = types.InlineKeyboardButton(text='Хоткеи', callback_data='hotkeys')
-inline1.add(teach, base, tips, hotkeys)
+inline1.add(teach, base, tips)
 
 inline2 = types.InlineKeyboardMarkup()
 from_scratch = types.InlineKeyboardButton(text='Обнулить мой прогресс уроков', callback_data='from_scratch')
@@ -39,7 +38,7 @@ current_level = types.InlineKeyboardButton(text='Текущий урок', callb
 inline2.add(from_scratch, my_levels, current_level, base)
 
 inline3 = types.InlineKeyboardMarkup()
-next_level = types.InlineKeyboardButton(text='Я прошел этот урок', callback_data='next_level')
+next_level = types.InlineKeyboardButton(text='Хочу следующий урок', callback_data='next_level')
 inline3.add(next_level)
 
 #обработка Старта
@@ -64,26 +63,30 @@ def start(message):
             text=f'Привет еще раз, {message.from_user.username}!!!',
             reply_markup=inline1)
 
-
-# def giga_help(chat):
-    
     
 def change_level(chat, level):
-    data = {
+    if level <= 3:
+        data = {
             'chat':f'{chat}',
             'level':f'{level}'
             }
-    response = requests.patch('http://127.0.0.1:8000/api/v1/chat/1/', headers=headers, data=json.dumps(data))
-    bot.send_message(
-            chat, 
-            text=f'Теперь на уроке {level}!'
-            )
+        response = requests.patch('http://127.0.0.1:8000/api/v1/chat/1/', headers=headers, data=json.dumps(data))
+        bot.send_message(
+                chat, 
+                text=f'Теперь на уроке {level}!'
+                )
+    else:
+       bot.send_message(
+                chat, 
+                text=f'Ты достиг последнего уровня!'
+                ) 
 
 def create_answer_keyboard(k):
     markup = types.InlineKeyboardMarkup()
     # print(data)
     x = level_answer[f'{k}'].split(';')
     for i in range(4):
+        print(f'level_{k}_answer_{i}')
         markup.add(types.InlineKeyboardButton(
             text=f'{x[i]}',
             callback_data=f'level_{k}_answer_{i}'
@@ -117,6 +120,7 @@ def send_level(chat, k):
         bot.send_message(
                 chat, 
                 text=level_dict[f'{k}'],
+                reply_markup= inline3
         )
 
 
@@ -136,11 +140,12 @@ def create_lessons_keyboard(data):
     ))
     return markup
 
-@bot.message_handler(func=lambda message: message.text.startswith("Гигачат"))
+@bot.message_handler(func=lambda message: message.text.startswith("Гигачат!"))
 def handle_help_message(message):
+    response = giga.chat(f"{message.text}")
     bot.send_message(
             chat_id=message.chat.id,
-            text='Я тут спешу на помощь',
+            text=f'{response.choices[0].message.content}',
         ) 
 
 @bot.callback_query_handler(func=lambda callback: True)
@@ -172,12 +177,8 @@ def callback_message(callback):
     elif callback.data == 'teach':
         bot.send_message(chat_id=callback.message.chat.id, text='Обучение', reply_markup=inline2)
 
-    elif callback.data == 'hotkeys':
-        bot.send_message(chat_id=callback.message.chat.id, text='Раздел хоткеев еще в разработке!')
-        bot.send_message(chat_id=callback.message.chat.id, text='Главное меню', reply_markup=inline1)
-
     elif callback.data == 'tips':
-        bot.send_message(chat_id=callback.message.chat.id, text='Раздел советов стилл ин прогресс :(')
+        bot.send_message(chat_id=callback.message.chat.id, text='Если хочешь спросить совета, напиши сообщение, которое начинается с слова "Гигачат!')
         bot.send_message(chat_id=callback.message.chat.id, text='Главное меню', reply_markup=inline1)
     
     elif callback.data == 'current_level':
@@ -202,12 +203,22 @@ def callback_message(callback):
         send_level(callback.message.chat.id, 0)
     
     elif callback.data == 'level_1_answer_2':
-        bot.send_message(chat_id=callback.message.chat.id, text='Ты ответил правильно! Мегахорош!', reply_markup=inline3)  
-    
-    elif callback.data == 'level_1_answer_0' or 'level_1_answer_1' or 'level_1_answer_3':
-        bot.send_message(chat_id=callback.message.chat.id, text='Ты ответил неправильно! Правильный ответ: 2.', reply_markup=inline3)
+        bot.send_message(chat_id=callback.message.chat.id, text='Ты ответил правильно! Мегахорош!', reply_markup=inline3)
 
-      
+    elif callback.data in ['level_1_answer_0', 'level_1_answer_1', 'level_1_answer_3']:
+        bot.send_message(chat_id=callback.message.chat.id, text='Ты ответил неправильно! Правильный ответ: 3. Если хочешь помощи нейросети, напиши сообщение в чат, которое начинается с "Гигачат!', reply_markup=inline3)
+
+    elif callback.data == 'level_2_answer_1':
+        bot.send_message(chat_id=callback.message.chat.id, text='Ты ответил правильно! Мегахорош!', reply_markup=inline3)
+
+    elif callback.data in ['level_2_answer_0', 'level_2_answer_2', 'level_2_answer_3']:
+        bot.send_message(chat_id=callback.message.chat.id, text='Ты ответил неправильно! Правильный ответ: 2. Если хочешь помощи нейросети, напиши сообщение в чат, которое начинается с "Гигачат!', reply_markup=inline3)
+
+    elif callback.data == 'level_3_answer_3':
+        bot.send_message(chat_id=callback.message.chat.id, text='Ты ответил правильно! Мегахорош!', reply_markup=inline3)
+
+    elif callback.data in ['level_3_answer_0', 'level_3_answer_1', 'level_3_answer_2']:
+        bot.send_message(chat_id=callback.message.chat.id, text='Ты ответил неправильно! Правильный ответ: 4. Если хочешь помощи нейросети, напиши сообщение в чат, которое начинается с "Гигачат!', reply_markup=inline3)
 
 
 try:
